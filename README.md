@@ -4,10 +4,10 @@ This repository provides a reproducible workflow to preprocess full-length 16s r
 
 **Highlights**
 - Demultiplex with barcode FASTA  
-- Multi‑step 5' trimming (barcodes/primers) with reverse‑complement matching  
+- Multi‑step 5` trimming (barcodes/primers) with reverse‑complement matching  
 - Length & quality trimming  
 - QC with FastQC  
-- Mapping with minimap2 ('map-ont') and primary-alignment extraction with samtools
+- Mapping with minimap2 (`map-ont`) and primary-alignment extraction with samtools
 
 ---
 
@@ -41,7 +41,7 @@ conda create -y -n fastqc fastqc
 conda create -y -n mapping minimap2 samtools
 ```
 
-If you already have binaries (e.g. on an HPC), ensure they're on your 'PATH' or use absolute paths.
+If you already have binaries (e.g. on an HPC), ensure they`re on your `PATH` or use absolute paths.
 
 ---
 
@@ -50,38 +50,38 @@ If you already have binaries (e.g. on an HPC), ensure they're on your 'PATH' or 
 Place (or symlink) the following in the working directory:
 
 - **Raw reads (demultiplexing input)**  
-  'bamboo22.fastq.gz'
+  `bamboo22.fastq.gz`
 
 - **Barcode file for demultiplexing**  
-  'forward_barcodes.fasta'  
-  > FASTA headers should contain the logical sample names; cutadapt will substitute '{name}' with this header for per-barcode outputs.
+  `forward_barcodes.fasta`  
+  > FASTA headers should contain the logical sample names; cutadapt will substitute `{name}` with this header for per-barcode outputs.
 
 - **Per‑sample intermediate files** (after demultiplexing), expected names:  
-  'bamboo22.S4.fastq', 'bamboo22.S5.fastq', 'bamboo22.S6.fastq', 'bamboo22.S10.fastq', 'bamboo22.S11.fastq', 'bamboo22.S12.fastq'  
+  `bamboo22.S4.fastq`, `bamboo22.S5.fastq`, `bamboo22.S6.fastq`, `bamboo22.S10.fastq`, `bamboo22.S11.fastq`, `bamboo22.S12.fastq`  
   > These are the demultiplexed files that subsequent steps will trim.
 
 - **Reference index for mapping**  
-  'silva_nr99_v138.2_toSpecies_trainset_uq.mmi'  
+  `silva_nr99_v138.2_toSpecies_trainset_uq.mmi`  
   > Minimap2 prebuilt index
 
 ---
 
 ## Output Files
 
-Per sample (e.g., 'S4'), after each trimming step:
+Per sample (e.g., `S4`), after each trimming step:
 
-- 'bamboo22.S4.b.fastq' – after removing barcode sequence 1  
-- 'bamboo22.S4.c.fastq' – after removing primer sequence 2  
-- 'bamboo22.S4.d.fastq' – after removing primer sequence 3  
-- 'bamboo22.S4.e.fastq' – after quality & length trimming (final pre‑mapping reads)
+- `bamboo22.S4.b.fastq` – after removing barcode sequence 1  
+- `bamboo22.S4.c.fastq` – after removing primer sequence 2  
+- `bamboo22.S4.d.fastq` – after removing primer sequence 3  
+- `bamboo22.S4.e.fastq` – after quality & length trimming (final pre‑mapping reads)
 
 QC:
-- 'fastqc_output/' – FastQC HTML and ZIP for all '*.e.fastq'
+- `fastqc_output/` – FastQC HTML and ZIP for all `*.e.fastq`
 
-Mapping & postprocessing (example for 'S4'):
-- 'bamboo22.S4.e.sam', 'bamboo22.S4.e.bam', 'bamboo22.S4.e.sorted.bam(.bai)'  
-- 'bamboo22.S4.e.sorted.primary.sam', 'bamboo22.S4.e.sorted.primary.bam'  
-- 'bamboo22.S4.e.sorted.primary.alignedseqs.txt' (RNAME list of primary alignments)
+Mapping & postprocessing (example for `S4`):
+- `bamboo22.S4.e.sam`, `bamboo22.S4.e.bam`, `bamboo22.S4.e.sorted.bam(.bai)`  
+- `bamboo22.S4.e.sorted.primary.sam`, `bamboo22.S4.e.sorted.primary.bam`  
+- `bamboo22.S4.e.sorted.primary.alignedseqs.txt` (RNAME list of primary alignments)
 
 ---
 
@@ -94,10 +94,10 @@ conda activate cutadapt
 cutadapt -g file:forward_barcodes.fasta -e 0.1 --rc -j 64 -o bamboo22.{name}.fastq bamboo22.fastq.gz
 ```
 
-- '-g file:forward_barcodes.fasta' reads multiple adapters from a FASTA; '{name}' is replaced with the FASTA header names to produce one output per barcode.  
-- '--rc' searches the reverse complement if present.  
-- '-e 0.1' allows up to 10% error rate in matches.  
-- **Outputs** like 'bamboo22.S4.fastq', 'bamboo22.S5.fastq', etc.
+- `-g file:forward_barcodes.fasta` reads multiple adapters from a FASTA; `{name}` is replaced with the FASTA header names to produce one output per barcode.  
+- `--rc` searches the reverse complement if present.  
+- `-e 0.1` allows up to 10% error rate in matches.  
+- **Outputs** like `bamboo22.S4.fastq`, `bamboo22.S5.fastq`, etc.
 
 ### 2) Multi‑step 5’ trimming (barcodes/primers)
 
@@ -120,9 +120,9 @@ cutadapt -g RGYTACCTTGTTACGACTT -e 0.1 --rc -j 64 -o bamboo22.S4.d.fastq bamboo2
 cutadapt --minimum-length 500 -l 1550 --quality-cutoff 20,20 -j 64 -o bamboo22.S4.e.fastq bamboo22.S4.d.fastq
 ```
 
-- '--minimum-length 500': retain reads ≥ 500 nt  
-- '-l 1550': crop reads to at most 1550 nt (3' end clipping to a fixed length)  
-- '--quality-cutoff 20,20': trim low-quality bases from both ends (Phred 20)
+- `--minimum-length 500`: retain reads ≥ 500 nt  
+- `-l 1550`: crop reads to at most 1550 nt (3` end clipping to a fixed length)  
+- `--quality-cutoff 20,20`: trim low-quality bases from both ends (Phred 20)
 
 ### 4) Quality control
 
@@ -149,14 +149,14 @@ samtools view -h -F 0x900 ${sample}.sorted.bam > ${sample}.sorted.primary.sam
 samtools view -b -o ${sample}.sorted.primary.bam ${sample}.sorted.primary.sam
 
 # List of reference IDs (RNAME) from primary alignments
-samtools view ${sample}.sorted.primary.bam | awk '{print $3}' > ${sample}.sorted.primary.alignedseqs.txt
+samtools view ${sample}.sorted.primary.bam | awk `{print $3}` > ${sample}.sorted.primary.alignedseqs.txt
 ```
 
 ---
 
 ## Run All Samples in a Loop
 
-To avoid repeating commands for each sample ('S4 S5 S6 S10 S11 S12'), you can use:
+To avoid repeating commands for each sample (`S4 S5 S6 S10 S11 S12`), you can use:
 
 ```bash
 # Demultiplex once (produces bamboo22.{name}.fastq)
@@ -194,7 +194,7 @@ for S in "${SAMPLES[@]}"; do
 
   samtools view -h -F 0x900 ${sample}.sorted.bam > ${sample}.sorted.primary.sam
   samtools view -b -o ${sample}.sorted.primary.bam ${sample}.sorted.primary.sam
-  samtools view ${sample}.sorted.primary.bam | awk '{print $3}' > ${sample}.sorted.primary.alignedseqs.txt
+  samtools view ${sample}.sorted.primary.bam | awk `{print $3}` > ${sample}.sorted.primary.alignedseqs.txt
 
 done
 ```
@@ -203,13 +203,13 @@ done
 
 ## Parameter Notes
 
-- **Cutadapt demultiplexing with 'file:' and '{name}'**  
-  Using '-g file:forward_barcodes.fasta' with '-o bamboo22.{name}.fastq' creates one output per FASTA header (the header becomes '{name}'), which is ideal for barcode demultiplexing.  
-- **'--rc'** checks both the given adapter and its reverse complement (useful for ONT reads where orientation can vary).  
-- **Error rate '-e 0.1' (10%)** can be used for ONT adapters/primers, balancing sensitivity and specificity.  
-- **'--minimum-length 500' and '-l 1550'** enforce a read length window suitable for your amplicon design; adjust to your target if different.  
-- **Mapping preset '-ax map-ont'** is optimized for ONT data.  
-- **Primary alignments** are extracted with 'samtools view -F 0x900' (removes secondary '0x100' and supplementary '0x800').
+- **Cutadapt demultiplexing with `file:` and `{name}`**  
+  Using `-g file:forward_barcodes.fasta` with `-o bamboo22.{name}.fastq` creates one output per FASTA header (the header becomes `{name}`), which is ideal for barcode demultiplexing.  
+- **`--rc`** checks both the given adapter and its reverse complement (useful for ONT reads where orientation can vary).  
+- **Error rate `-e 0.1` (10%)** can be used for ONT adapters/primers, balancing sensitivity and specificity.  
+- **`--minimum-length 500` and `-l 1550`** enforce a read length window suitable for your amplicon design; adjust to your target if different.  
+- **Mapping preset `-ax map-ont`** is optimized for ONT data.  
+- **Primary alignments** are extracted with `samtools view -F 0x900` (removes secondary `0x100` and supplementary `0x800`).
 
 ---
 
