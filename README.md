@@ -4,7 +4,7 @@ This repository provides a reproducible workflow to preprocess full-length 16s r
 
 **Highlights**
 - Demultiplex with barcode FASTA  
-- Multi‑step 5` trimming (barcodes/primers) with reverse‑complement matching  
+- Multi‑step 5' trimming (barcodes/primers) with reverse‑complement matching  
 - Length & quality trimming  
 - QC with FastQC  
 - Mapping with minimap2 (`map-ont`) and primary-alignment extraction with samtools
@@ -16,6 +16,7 @@ This repository provides a reproducible workflow to preprocess full-length 16s r
 - [Input Files](#input-files)
 - [Output Files](#output-files)
 - [Step-by-Step Pipeline](#step-by-step-pipeline)
+- [Run All Samples in a Loop](#run-all-samples-in-a-loop)
 - [Parameter Notes](#parameter-notes)
 - [Citation](#citations)
 - [License](#license)
@@ -161,20 +162,17 @@ To avoid repeating commands for each sample (`S4 S5 S6 S10 S11 S12`), you can us
 ```bash
 # Demultiplex once (produces bamboo22.{name}.fastq)
 conda activate cutadapt
-cutadapt -g file:forward_barcodes.fasta -e 0.1 --rc -j 64 \
-  -o bamboo22.{name}.fastq bamboo22.fastq.gz
+cutadapt -g file:forward_barcodes.fasta -e 0.1 --rc -j 64 -o bamboo22.{name}.fastq bamboo22.fastq.gz
 
 # Define samples present after demultiplexing
 SAMPLES=(S4 S5 S6 S10 S11 S12)
 
 # Round 1–3 trimming + length/quality
 for S in "${SAMPLES[@]}"; do
-  cutadapt -g GGTAGTATATACAGAGAG    -e 0.1 --rc -j 64 -o bamboo22.${S}.b.fastq bamboo22.${S}.fastq
-  cutadapt -g AGRGTTYGATYMTGGCTCAG  -e 0.1 --rc -j 64 -o bamboo22.${S}.c.fastq bamboo22.${S}.b.fastq
-  cutadapt -g RGYTACCTTGTTACGACTT   -e 0.1 --rc -j 64 -o bamboo22.${S}.d.fastq bamboo22.${S}.c.fastq
-  cutadapt --minimum-length 500 -l 1550 --quality-cutoff 20,20 -j 64 \
-           -o bamboo22.${S}.e.fastq bamboo22.${S}.d.fastq
-
+  cutadapt -g GGTAGTATATACAGAGAG -e 0.1 --rc -j 64 -o bamboo22.${S}.b.fastq bamboo22.${S}.fastq
+  cutadapt -g AGRGTTYGATYMTGGCTCAG -e 0.1 --rc -j 64 -o bamboo22.${S}.c.fastq bamboo22.${S}.b.fastq
+  cutadapt -g RGYTACCTTGTTACGACTT -e 0.1 --rc -j 64 -o bamboo22.${S}.d.fastq bamboo22.${S}.c.fastq
+  cutadapt --minimum-length 500 -l 1550 --quality-cutoff 20,20 -j 64 -o bamboo22.${S}.e.fastq bamboo22.${S}.d.fastq
 done
 
 # QC
@@ -182,7 +180,8 @@ conda activate fastqc
 mkdir -p fastqc_output
 fastqc *.e.fastq -o fastqc_output/
 
-# Mapping & primary extraction (ensure minimap2 and samtools are available)
+conda activate mapping
+# Mapping & primary extraction
 for S in "${SAMPLES[@]}"; do
   sample="bamboo22.${S}.e"
 
