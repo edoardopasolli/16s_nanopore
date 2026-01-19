@@ -205,8 +205,7 @@ samtools view "${sample}.filtered.q20.pid85.len500.bam" | awk '{print $3}' > "${
 
 Please cite the pipeline as follows:
 
-- **Cutadapt** – Adapter trimming and demultiplexing  
-  Ida Romano, Edoardo Pasolli, Jean-Claude Walser, Valeria Ventorino, Sonja Reinhard, Giuseppina Magaraci, Olimpia Pepe, Natacha Bodenhausen. *A hybrid and cost-efficient barcoding strategy for full-length 16s rRNA.* Under review.
+- Ida Romano, Edoardo Pasolli, Jean-Claude Walser, Valeria Ventorino, Sonja Reinhard, Giuseppina Magaraci, Olimpia Pepe, Natacha Bodenhausen. *A hybrid and cost-efficient barcoding strategy for full-length 16s rRNA.* Under review.
   
 ---
 
