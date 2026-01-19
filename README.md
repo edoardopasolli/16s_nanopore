@@ -16,7 +16,6 @@ This repository provides a reproducible workflow to preprocess full-length 16s r
 - [Input Files](#input-files)
 - [Output Files](#output-files)
 - [Step-by-Step Pipeline](#step-by-step-pipeline)
-- [Run All Samples in a Loop](#run-all-samples-in-a-loop)
 - [Parameter Notes](#parameter-notes)
 - [Citation](#citations)
 - [License](#license)
@@ -153,49 +152,39 @@ samtools view -b -o ${sample}.sorted.primary.bam ${sample}.sorted.primary.sam
 samtools view ${sample}.sorted.primary.bam | awk `{print $3}` > ${sample}.sorted.primary.alignedseqs.txt
 ```
 
----
-
-## Run All Samples in a Loop
-
-To avoid repeating commands for each sample (`S4 S5 S6 S10 S11 S12`), you can use:
+## 6) Filter high‑quality primary alignments
 
 ```bash
-# Demultiplex once (produces bamboo22.{name}.fastq)
-conda activate cutadapt
-cutadapt -g file:forward_barcodes.fasta -e 0.1 --rc -j 64 -o bamboo22.{name}.fastq bamboo22.fastq.gz
-
-# Define samples present after demultiplexing
-SAMPLES=(S4 S5 S6 S10 S11 S12)
-
-# Round 1–3 trimming + length/quality
-for S in "${SAMPLES[@]}"; do
-  cutadapt -g GGTAGTATATACAGAGAG -e 0.1 --rc -j 64 -o bamboo22.${S}.b.fastq bamboo22.${S}.fastq
-  cutadapt -g AGRGTTYGATYMTGGCTCAG -e 0.1 --rc -j 64 -o bamboo22.${S}.c.fastq bamboo22.${S}.b.fastq
-  cutadapt -g RGYTACCTTGTTACGACTT -e 0.1 --rc -j 64 -o bamboo22.${S}.d.fastq bamboo22.${S}.c.fastq
-  cutadapt --minimum-length 500 -l 1550 --quality-cutoff 20,20 -j 64 -o bamboo22.${S}.e.fastq bamboo22.${S}.d.fastq
-done
-
-# QC
-conda activate fastqc
-mkdir -p fastqc_output
-fastqc *.e.fastq -o fastqc_output/
-
 conda activate mapping
-# Mapping & primary extraction
-for S in "${SAMPLES[@]}"; do
-  sample="bamboo22.${S}.e"
+sample=bamboo22.S4.e
 
-  minimap2 -t 32 -ax map-ont silva_nr99_v138.2_toSpecies_trainset_uq.mmi ${sample}.fastq > ${sample}.sam
+samtools view -h -q 20 -F 0x904 "${sample}.sorted.bam" | \
+awk '
+  BEGIN{OFS="\t"}
+  /^@/ { print; next }  # pass header lines
+  {
+    cigar = $6
+    # compute aligned length from CIGAR (sum of M,=,X,I,D; ignore S/H/P/N)
+    aln = 0
+    tmp = cigar
+    while (match(tmp, /([0-9]+)([MIDNSHP=X])/, a)) {
+      n = a[1]
+      op = a[2]
+      if (op=="M" || op=="=" || op=="X" || op=="I" || op=="D") aln += n
+      tmp = substr(tmp, RSTART + RLENGTH)
+    }
+    # parse NM tag (edit distance)
+    nm = 0
+    if (match($0, /NM:i:([0-9]+)/, m)) nm = m[1]
+    pid = (aln > 0) ? (1 - nm/aln) : 0
+    # filters: aligned length >= 500 bp AND PID >= 0.85
+    if (aln >= 500 && pid >= 0.85) print
+  }' | \
+samtools view -b -o "${sample}.filtered.q20.pid85.len500.bam" -
 
-  samtools view -b -o ${sample}.bam ${sample}.sam
-  samtools sort -o ${sample}.sorted.bam ${sample}.bam
-  samtools index ${sample}.sorted.bam
+samtools index "${sample}.filtered.q20.pid85.len500.bam"
 
-  samtools view -h -F 0x900 ${sample}.sorted.bam > ${sample}.sorted.primary.sam
-  samtools view -b -o ${sample}.sorted.primary.bam ${sample}.sorted.primary.sam
-  samtools view ${sample}.sorted.primary.bam | awk `{print $3}` > ${sample}.sorted.primary.alignedseqs.txt
-
-done
+samtools view "${sample}.filtered.q20.pid85.len500.bam" | awk '{print $3}' > "${sample}.filtered.q20.pid85.txt"
 ```
 
 ---
