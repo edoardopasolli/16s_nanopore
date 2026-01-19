@@ -35,7 +35,7 @@ Tested on Linux (x86_64). Recommended sufficient RAM for indexing/mapping.
 
 **Conda install:**
 
-# Create and activate environments (or use your existing ones)
+'''bash
 conda create -y -n cutadapt cutadapt
 conda create -y -n fastqc fastqc
 conda create -y -n mapping minimap2 samtools
