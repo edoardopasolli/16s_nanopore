@@ -35,11 +35,11 @@ Tested on Linux (x86_64). Recommended sufficient RAM for indexing/mapping.
 
 **Conda install:**
 
-'''bash
+```bash
 conda create -y -n cutadapt cutadapt
 conda create -y -n fastqc fastqc
 conda create -y -n mapping minimap2 samtools
-'''
+```
 
 If you already have binaries (e.g. on an HPC), ensure they're on your 'PATH' or use absolute paths.
 
@@ -89,10 +89,10 @@ Mapping & postprocessing (example for 'S4'):
 
 ### 1) Demultiplex by barcode
 
-'''bash
+```bash
 conda activate cutadapt
 cutadapt -g file:forward_barcodes.fasta -e 0.1 --rc -j 64 -o bamboo22.{name}.fastq bamboo22.fastq.gz
-'''
+```
 
 - '-g file:forward_barcodes.fasta' reads multiple adapters from a FASTA; '{name}' is replaced with the FASTA header names to produce one output per barcode.  
 - '--rc' searches the reverse complement if present.  
@@ -103,7 +103,7 @@ cutadapt -g file:forward_barcodes.fasta -e 0.1 --rc -j 64 -o bamboo22.{name}.fas
 
 For each sample, sequentially trim the three adapter/primer motifs (allowing RC and 10% error):
 
-'''bash
+```bash
 # Barcode (round 1)
 cutadapt -g GGTAGTATATACAGAGAG -e 0.1 --rc -j 64 -o bamboo22.S4.b.fastq bamboo22.S4.fastq
 
@@ -112,13 +112,13 @@ cutadapt -g AGRGTTYGATYMTGGCTCAG -e 0.1 --rc -j 64 -o bamboo22.S4.c.fastq bamboo
 
 # Primer (round 3)
 cutadapt -g RGYTACCTTGTTACGACTT -e 0.1 --rc -j 64 -o bamboo22.S4.d.fastq bamboo22.S4.c.fastq
-'''
+```
 
 ### 3) Length and quality trimming
 
-'''bash
+```bash
 cutadapt --minimum-length 500 -l 1550 --quality-cutoff 20,20 -j 64 -o bamboo22.S4.e.fastq bamboo22.S4.d.fastq
-'''
+```
 
 - '--minimum-length 500': retain reads ≥ 500 nt  
 - '-l 1550': crop reads to at most 1550 nt (3' end clipping to a fixed length)  
@@ -126,15 +126,15 @@ cutadapt --minimum-length 500 -l 1550 --quality-cutoff 20,20 -j 64 -o bamboo22.S
 
 ### 4) Quality control
 
-'''bash
+```bash
 conda activate fastqc
 mkdir -p fastqc_output
 fastqc *.e.fastq -o fastqc_output/
-'''
+```
 
 ### 5) Mapping and primary alignments
 
-'''bash
+```bash
 conda activate mapping
 sample=bamboo22.S4.e
 
@@ -150,7 +150,7 @@ samtools view -b -o ${sample}.sorted.primary.bam ${sample}.sorted.primary.sam
 
 # List of reference IDs (RNAME) from primary alignments
 samtools view ${sample}.sorted.primary.bam | awk '{print $3}' > ${sample}.sorted.primary.alignedseqs.txt
-'''
+```
 
 ---
 
@@ -158,7 +158,7 @@ samtools view ${sample}.sorted.primary.bam | awk '{print $3}' > ${sample}.sorted
 
 To avoid repeating commands for each sample ('S4 S5 S6 S10 S11 S12'), you can use:
 
-'''bash
+```bash
 # Demultiplex once (produces bamboo22.{name}.fastq)
 conda activate cutadapt
 cutadapt -g file:forward_barcodes.fasta -e 0.1 --rc -j 64 \
@@ -197,7 +197,7 @@ for S in "${SAMPLES[@]}"; do
   samtools view ${sample}.sorted.primary.bam | awk '{print $3}' > ${sample}.sorted.primary.alignedseqs.txt
 
 done
-'''
+```
 
 ---
 
