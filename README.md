@@ -42,7 +42,7 @@ conda create -y -n fastqc fastqc
 conda create -y -n mapping minimap2 samtools
 ```
 
-If you already have binaries (e.g. on an HPC), ensure they`re on your `PATH` or use absolute paths.
+If you already have binaries (e.g. on an HPC), ensure they are on your `PATH` or use absolute paths.
 
 ---
 
