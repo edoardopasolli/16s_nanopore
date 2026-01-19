@@ -2,12 +2,12 @@
 
 This repository provides a reproducible workflow to preprocess full-length 16s rRNA nanopore sequencing (demultiplexing and adapter/primer trimming), run QC, and map reads to a reference database to extract primary alignments.
 
-> **Highlights**
-> - Demultiplex with barcode FASTA  
-> - Multi‑step 5' trimming (barcodes/primers) with reverse‑complement matching  
-> - Length & quality trimming  
-> - QC with FastQC  
-> - Mapping with minimap2 ('map-ont') and primary-alignment extraction with samtools
+**Highlights**
+- Demultiplex with barcode FASTA  
+- Multi‑step 5' trimming (barcodes/primers) with reverse‑complement matching  
+- Length & quality trimming  
+- QC with FastQC  
+- Mapping with minimap2 ('map-ont') and primary-alignment extraction with samtools
 
 ---
 
@@ -33,8 +33,8 @@ Tested on Linux (x86_64). Recommended sufficient RAM for indexing/mapping.
 - samtools
 - conda (for environment management)
 
-> **Conda install:**
-'''bash
+**Conda install:**
+
 # Create and activate environments (or use your existing ones)
 conda create -y -n cutadapt cutadapt
 conda create -y -n fastqc fastqc
