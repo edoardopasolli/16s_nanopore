@@ -62,7 +62,7 @@ Place (or symlink) the following in the working directory:
 
 - **Reference index for mapping**  
   'silva_nr99_v138.2_toSpecies_trainset_uq.mmi'  
-  > minimap2 prebuilt index
+  > Minimap2 prebuilt index
 
 ---
 
