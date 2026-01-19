@@ -17,7 +17,7 @@ This repository provides a reproducible workflow to preprocess full-length 16s r
 - [Output Files](#output-files)
 - [Step-by-Step Pipeline](#step-by-step-pipeline)
 - [Parameter Notes](#parameter-notes)
-- [Citation](#citations)
+- [Citation](#citation)
 - [License](#license)
 
 ---
