@@ -201,7 +201,7 @@ samtools view "${sample}.filtered.q20.pid85.len500.bam" | awk '{print $3}' > "${
 
 ---
 
-## Citations
+## Citation
 
 Please cite the pipeline as follows:
 
