@@ -117,11 +117,11 @@ cutadapt -g RGYTACCTTGTTACGACTT -e 0.1 --rc -j 64 -o bamboo22.S4.d.fastq bamboo2
 ### 3) Length and quality trimming
 
 ```bash
-cutadapt --minimum-length 500 -l 1550 --quality-cutoff 20,20 -j 64 -o bamboo22.S4.e.fastq bamboo22.S4.d.fastq
+cutadapt --minimum-length 1350 -l 1650 --quality-cutoff 20,20 -j 64 -o bamboo22.S4.e.fastq bamboo22.S4.d.fastq
 ```
 
-- `--minimum-length 500`: retain reads ≥ 500 nt  
-- `-l 1550`: crop reads to at most 1550 nt (3` end clipping to a fixed length)  
+- `--minimum-length 1350`: retain reads ≥ 1350 nt  
+- `-l 1650`: crop reads to at most 1650 nt (3` end clipping to a fixed length)  
 - `--quality-cutoff 20,20`: trim low-quality bases from both ends (Phred 20)
 
 ### 4) Quality control
@@ -195,7 +195,7 @@ samtools view "${sample}.filtered.q20.pid85.len500.bam" | awk '{print $3}' > "${
   Using `-g file:forward_barcodes.fasta` with `-o bamboo22.{name}.fastq` creates one output per FASTA header (the header becomes `{name}`), which is ideal for barcode demultiplexing.  
 - **`--rc`** checks both the given adapter and its reverse complement (useful for ONT reads where orientation can vary).  
 - **Error rate `-e 0.1` (10%)** can be used for ONT adapters/primers, balancing sensitivity and specificity.  
-- **`--minimum-length 500` and `-l 1550`** enforce a read length window suitable for your amplicon design; adjust to your target if different.  
+- **`--minimum-length 1350` and `-l 1650`** enforce a read length window suitable for your amplicon design; adjust to your target if different.  
 - **Mapping preset `-ax map-ont`** is optimized for ONT data.  
 - **Primary alignments** are extracted with `samtools view -F 0x900` (removes secondary `0x100` and supplementary `0x800`).
 
