@@ -9,7 +9,8 @@ The workflow performs:
 3. Read length and quality filtering;
 4. Quality control with FastQC;
 5. Mapping with minimap2;
-6. Extraction of primary alignments with samtools.
+6. Extraction of primary alignments with samtools;
+7. Filtering of high-quality primary alignments based on mapping quality, aligned length, and sequence identity.
 
 The workflow is designed to be run directly from the command line.  
 All user-editable parameters are collected in a single configuration block, so the analysis can be adapted to different datasets without modifying the individual commands.
@@ -26,6 +27,7 @@ Required software:
 - `FastQC`
 - `minimap2`
 - `samtools`
+- `awk`
 - `conda`
 
 A single conda environment can be created as follows:
@@ -79,7 +81,7 @@ bamboo22.S5.fastq
 
 ## Edit variables
 
-Before running the workflow, edit only the variables in this block.
+Before running the workflow, edit the variables in this block.
 
 ```bash
 # =========================
@@ -104,14 +106,19 @@ PRIMER_REV="RGYTACCTTGTTACGACTT"
 
 # Cutadapt parameters
 ERROR_RATE="0.1"
-MIN_LENGTH="135"
+MIN_LENGTH="1350"
 MAX_LENGTH="1650"
 QUALITY_CUTOFF="20,20"
-CUTADAPT_THREADS="32"
+CUTADAPT_THREADS="64"
 
 # Mapping parameters
 MINIMAP2_THREADS="32"
 MINIMAP2_PRESET="map-ont"
+
+# High-quality alignment filtering parameters
+MIN_MAPQ="20"
+MIN_ALIGNED_LENGTH="500"
+MIN_PID="0.85"
 
 # Output directories
 FASTQC_DIR="fastqc_output"
@@ -285,6 +292,72 @@ for SAMPLE in "${SAMPLES[@]}"; do
     | awk '{print $3}' \
     > "${SAMPLE_PREFIX}.sorted.primary.alignedseqs.txt"
 
+  # -------------------------
+  # Step 5: Filter high-quality primary alignments
+  # -------------------------
+  
+  echo "Step 5: filtering high-quality primary alignments for sample ${SAMPLE}"
+
+  samtools view \
+    -h \
+    -q "${MIN_MAPQ}" \
+    -F 0x904 \
+    "${SAMPLE_PREFIX}.sorted.bam" \
+    | awk -v min_len="${MIN_ALIGNED_LENGTH}" -v min_pid="${MIN_PID}" '
+      BEGIN { OFS="\t" }
+
+      /^@/ {
+        print
+        next
+      }
+
+      {
+        cigar = $6
+
+        # Compute aligned length from CIGAR.
+        # Sum M, =, X, I, and D operations.
+        # Ignore S, H, P, and N.
+        aln = 0
+        tmp = cigar
+
+        while (match(tmp, /([0-9]+)([MIDNSHP=X])/, a)) {
+          n = a[1]
+          op = a[2]
+
+          if (op == "M" || op == "=" || op == "X" || op == "I" || op == "D") {
+            aln += n
+          }
+
+          tmp = substr(tmp, RSTART + RLENGTH)
+        }
+
+        # Parse NM tag, edit distance.
+        nm = 0
+        if (match($0, /NM:i:([0-9]+)/, m)) {
+          nm = m[1]
+        }
+
+        pid = (aln > 0) ? (1 - nm / aln) : 0
+
+        # Keep only alignments passing length and identity filters.
+        if (aln >= min_len && pid >= min_pid) {
+          print
+        }
+      }
+    ' \
+    | samtools view \
+        -b \
+        -o "${SAMPLE_PREFIX}.filtered.q${MIN_MAPQ}.pid85.len${MIN_ALIGNED_LENGTH}.bam" \
+        -
+
+  samtools index \
+    "${SAMPLE_PREFIX}.filtered.q${MIN_MAPQ}.pid85.len${MIN_ALIGNED_LENGTH}.bam"
+
+  samtools view \
+    "${SAMPLE_PREFIX}.filtered.q${MIN_MAPQ}.pid85.len${MIN_ALIGNED_LENGTH}.bam" \
+    | awk '{print $3}' \
+    > "${SAMPLE_PREFIX}.filtered.q${MIN_MAPQ}.pid85.txt"
+
 done
 
 echo "Workflow completed successfully"
@@ -356,6 +429,9 @@ mapping_output/bamboo22.S4.e.sorted.bam.bai
 mapping_output/bamboo22.S4.e.sorted.primary.sam
 mapping_output/bamboo22.S4.e.sorted.primary.bam
 mapping_output/bamboo22.S4.e.sorted.primary.alignedseqs.txt
+mapping_output/bamboo22.S4.e.filtered.q20.pid85.len500.bam
+mapping_output/bamboo22.S4.e.filtered.q20.pid85.len500.bam.bai
+mapping_output/bamboo22.S4.e.filtered.q20.pid85.txt
 ```
 
 The file:
@@ -364,7 +440,20 @@ The file:
 mapping_output/bamboo22.S4.e.sorted.primary.alignedseqs.txt
 ```
 
-contains the reference identifiers associated with primary alignments.
+contains the reference identifiers associated with all primary alignments.
+
+The file:
+
+```text
+mapping_output/bamboo22.S4.e.filtered.q20.pid85.txt
+```
+
+contains the reference identifiers associated with high-quality primary alignments passing the following filters:
+
+- mapping quality ≥ 20;
+- aligned length ≥ 500 bp;
+- percentage identity ≥ 0.85;
+- exclusion of unmapped, secondary, and supplementary alignments.
 
 ---
 
@@ -387,11 +476,11 @@ contains the reference identifiers associated with primary alignments.
 | `CUTADAPT_THREADS` | Number of threads for cutadapt | `64` |
 | `MINIMAP2_THREADS` | Number of threads for minimap2 | `32` |
 | `MINIMAP2_PRESET` | Minimap2 preset for Nanopore reads | `map-ont` |
+| `MIN_MAPQ` | Minimum mapping quality for high-quality alignments | `20` |
+| `MIN_ALIGNED_LENGTH` | Minimum aligned length for high-quality alignments | `500` |
+| `MIN_PID` | Minimum percentage identity for high-quality alignments | `0.85` |
 | `FASTQC_DIR` | Directory for FastQC output | `fastqc_output` |
 | `MAPPING_DIR` | Directory for mapping output | `mapping_output` |
-
----
-
 
 ---
 
@@ -400,7 +489,7 @@ contains the reference identifiers associated with primary alignments.
 If you use this workflow, please cite:
 
 > Ida Romano, Edoardo Pasolli, Jean-Claude Walser, Valeria Ventorino, Sonja Reinhard, Giuseppina Magaraci, Olimpia Pepe, Natacha Bodenhausen.  
-> *A hybrid and cost-efficient barcoding strategy for full-length 16S rRNA nanopore sequencing of environmental samples.*  
+> *A hybrid and cost-efficient barcoding strategy for full-length 16S rRNA Nanopore sequencing of environmental samples.*  
 > Under review.
 
 ---
