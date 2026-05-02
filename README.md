@@ -474,8 +474,8 @@ contains the reference identifiers associated with high-quality primary alignmen
 | `PRIMER_FWD` | Forward primer sequence | `AGRGTTYGATYMTGGCTCAG` |
 | `PRIMER_REV` | Reverse primer sequence | `RGYTACCTTGTTACGACTT` |
 | `ERROR_RATE` | Maximum adapter/primer matching error rate | `0.1` |
-| `MIN_LENGTH` | Minimum retained read length | `500` |
-| `MAX_LENGTH` | Maximum retained read length after cropping | `1550` |
+| `MIN_LENGTH` | Minimum retained read length | `1350` |
+| `MAX_LENGTH` | Maximum retained read length after cropping | `1650` |
 | `QUALITY_CUTOFF` | 5' and 3' quality trimming cutoff | `20,20` |
 | `CUTADAPT_THREADS` | Number of threads for cutadapt | `64` |
 | `MINIMAP2_THREADS` | Number of threads for minimap2 | `32` |
