@@ -292,11 +292,15 @@ for SAMPLE in "${SAMPLES[@]}"; do
     | awk '{print $3}' \
     > "${SAMPLE_PREFIX}.sorted.primary.alignedseqs.txt"
 
-  # -------------------------
-  # Step 5: Filter high-quality primary alignments
-  # -------------------------
+done
+
+# -------------------------
+# Step 5: Filter high-quality primary alignments
+# -------------------------
   
-  echo "Step 5: filtering high-quality primary alignments for sample ${SAMPLE}"
+echo "Step 5: filtering high-quality primary alignments for sample ${SAMPLE}"
+
+for SAMPLE in "${SAMPLES[@]}"; do
 
   samtools view \
     -h \
